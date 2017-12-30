@@ -1,6 +1,6 @@
 # 简介与构建
 本项目通过提供伪装编译器来实现到具体编译器的重定向,以达到替换所使用编译器的目的，升级编译器之后能获得两点好处：
-1. 大幅度提高编译器速度(具体数据见下)
+1. 大幅度提高编译器速度
 2. 使用最新C#语法
 
 ## 1.Roslyn
@@ -32,7 +32,7 @@ smcs为伪装的编译器,注意该程序集会是mono加载执行，所以只做具体编译器的程序启动,将
 2. 重命名%Unity目录%\Editor\Data\Mono\lib\mono\2.0\smcs.exe 为mcs.exe,拷贝smcs.exe至该目录。
 
 # 行为配置
-程序优先使用具体Unity工程目录的Roslyn.json文件，如果不存在则使用Rolsyn目录下的config.json,行为配置支持支持或将要支持一下行为
+程序优先使用Unity工程目录下的Roslyn.json文件，如果不存在则使用Rolsyn目录下的config.json,行为配置支持或将要支持一下行为
 1. UseRoslyn:bool 控制是否使用Roslyn编译器
 2. LanguageVersion:string 控制使用的C#语言版本
 	* Unity 默认行为,当前Unity最大支持的版本
