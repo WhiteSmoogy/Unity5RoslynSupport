@@ -38,10 +38,12 @@ smcs为伪装的编译器,注意该程序集会是mono加载执行，所以只做具体编译器的程序启动,将
 	* Unity 默认行为,当前Unity最大支持的版本
     * Number 6,7,7.2 数字，指定具体版本号
     * Laster 当前Roslyn支持的最大版本
-3. DynamicSupport:bool 是否引用dynamic所需要的Microsoft.Csharp库
 4. ReferenceDir:string 控制编译器时所使用的系统库目录
 	* %.NetFx% 默认,使用Program File下的dll
     * %.Mono%  使用当前smcs.exe目录下的dll
     * %.Roslyn% 使用Roslyn目录下的dll
     * 绝对路径 使用该目录下的dll
 5. OutputLog:bool 控制是否输出log文件
+
+# TODO
+mac 支持
