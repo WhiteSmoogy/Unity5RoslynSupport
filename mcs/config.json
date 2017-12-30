@@ -1,11 +1,14 @@
 {
   "UseRoslyn": true,
   "Logging": {
-    "IncludeScopes": false,
-    "LogLevel": {
-      "Default": "Debug",
-      "System": "Information",
-      "Microsoft": "Information"
-    }
+    "OutputLog": false
+  },
+  "Roslyn": {
+    "Flags": "-noconfig -nostdlib+ -nologo",
+    "ReferenceDir": "%.NetFx%",
+    "SDK": {
+      "References": "mscorlib.dll System.dll System.Core.dll System.Xml.dll"
+    },
+    "LangVersion": "Unity"
   }
 }

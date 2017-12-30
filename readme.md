@@ -34,7 +34,7 @@ smcs为伪装的编译器,注意该程序集会是mono加载执行，所以只做具体编译器的程序启动,将
 # 行为配置
 程序优先使用Unity工程目录下的Roslyn.json文件，如果不存在则使用Roslyn目录下的config.json,行为配置支持或将要支持以下行为
 1. UseRoslyn:bool 控制是否使用Roslyn编译器
-2. LanguageVersion:string 控制使用的C#语言版本
+2. LangVersion:string 控制使用的C#语言版本
 	* Unity 默认行为,当前Unity最大支持的版本
     * Number 6,7,7.2 数字，指定具体版本号
     * Laster 当前Roslyn支持的最大版本

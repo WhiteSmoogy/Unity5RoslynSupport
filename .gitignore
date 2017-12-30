@@ -189,3 +189,4 @@ $RECYCLE.BIN/
 roslyn/
 
 mono/
+/mcs/Properties/launchSettings.json

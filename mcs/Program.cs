@@ -80,9 +80,10 @@ namespace mcs
 
         private static IConfiguration LoadConfiguration()
         {
+            var exist_proj_config = File.Exists("Roslyn.json");
             var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.Combine(WorkDirectory,"config.json"), false, false);
+                .SetBasePath(exist_proj_config?Directory.GetCurrentDirectory():WorkDirectory)
+                .AddJsonFile(exist_proj_config ? "Roslyn.json":"config.json", false, false);
             return builder.Build();
         }
 
@@ -94,67 +95,92 @@ namespace mcs
 
         private static void Configure(ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddNLog();
-            var loggingConfiguration = new LoggingConfiguration();
-            loggingConfiguration.AddTarget(new NLog.Targets.FileTarget("file_target") {
-                FileName =Path.GetFullPath(@"mcs.log"),
-                DeleteOldFileOnStartup = true,
-                KeepFileOpen = true,
-                AutoFlush = false
-            });
-            loggingConfiguration.AddRuleForAllLevels("file_target");
-            loggerFactory.ConfigureNLog(loggingConfiguration);
+            bool use_log = true;
+            bool.TryParse(Configuration.GetSection("Logging")?["OutputLog"], out use_log);
+            if (use_log)
+            {
+                loggerFactory.AddNLog();
+                var loggingConfiguration = new LoggingConfiguration();
+                loggingConfiguration.AddTarget(new NLog.Targets.FileTarget("file_target")
+                {
+                    FileName = Path.GetFullPath(@"mcs.log"),
+                    DeleteOldFileOnStartup = true,
+                    KeepFileOpen = true,
+                    AutoFlush = false
+                });
+                loggingConfiguration.AddRuleForAllLevels("file_target");
+                loggerFactory.ConfigureNLog(loggingConfiguration);
+            }
         }
 
         static string[] PrepareArguments(string[] args)
         {
+            var roslyn_section = Configuration.GetSection("Roslyn");
+            var flags = roslyn_section["Flags"] ?? "-noconfig -nostdlib+ -nologo";
             var arguments = new List<string>();
-            //TODO:read from config
-            var flags = new string[] {
-                "-noconfig",
-                "-nostdlib+",
-                "-nologo"
-            };
-            arguments.AddRange(flags);
+            arguments.AddRange(flags.Split(' '));
 
             //prepare System.*.dll reference
             var response_file = args[0].Substring(1);
             var unity_compiler_options = File.ReadAllLines(response_file);
 
-            var smcs_location = Environment.GetEnvironmentVariable("smcs");
             var sdkline = Array.Find(unity_compiler_options, line => line.Contains("-sdk:"));
             if (sdkline != null && sdkline.Contains("4.6"))
                 ;//TODO
             else
             {
-                //TODO Platfom dispatch
-                //Windows
-                var program_dir = Environment.GetEnvironmentVariable("PROGRAMFILES(X86)");
-                var profile_partdir = @"Reference Assemblies\Microsoft\Framework\.NETFramework\v3.5\Profile";
-
-                //TODO dpendents on smcs location
-                var full_dir = "Unity Full v3.5";
-                var subset_dir = "Unity Subset v3.5";
-
-                //TODO:read from config
-                var reference_dlls = new string[]
-                {
-                    "mscorlib.dll",
-                    "System.dll",
-                    "System.Core.dll",
-                    "System.Xml.dll"
-                };
+                var references = roslyn_section.GetSection("SDK")?["References"] ?? "mscorlib.dll System.dll System.Core.dll System.Xml.dll";
+                var reference_dlls = references.Split(' ');
 
                 arguments.AddRange(
                     reference_dlls
-                    .Select(dllname => $"-r:\"{Path.Combine(program_dir,profile_partdir, full_dir,dllname)}\"")
+                    .Select(dllname => $"-r:\"{Path.Combine(ReferenceDir(roslyn_section), dllname)}\"")
                     );
             }
 
+            ConfigureLangVersion(roslyn_section, arguments);
             arguments.AddRange(args);
 
-            Logger.LogInformation($"Source Location:{smcs_location} Original Arguments:{string.Join(" ", args)} Target Arguments:{string.Join(" ", arguments)}");
+            Logger.LogInformation($"Original Arguments:{string.Join(" ", args)} Target Arguments:{string.Join(" ", arguments)}");
             return arguments.ToArray();
+        }
+
+        static string ReferenceDir(IConfigurationSection roslyn_section)
+        {
+            //TODO Platfom dispatch
+            //Windows
+            var refer_dir = roslyn_section["ReferenceDir"] ?? "%.NetFx%";
+            switch (refer_dir)
+            {
+                case "%.NetFx%":
+                    {
+                        var program_dir = Environment.GetEnvironmentVariable("PROGRAMFILES(X86)");
+                        var profile_partdir = @"Reference Assemblies\Microsoft\Framework\.NETFramework\v3.5\Profile";
+                        var smcs_location = Environment.GetEnvironmentVariable("smcs").Replace('\\','/');
+                        var full_dir = "Unity Full v3.5";
+                        var subset_dir = "Unity Subset v3.5";
+                        var use_subset = smcs_location.Contains("unity/smcs.exe");
+                        return Path.Combine(program_dir, profile_partdir, use_subset ? subset_dir : full_dir);
+                    }
+            }
+
+            return null;
+        }
+
+        static void ConfigureLangVersion(IConfigurationSection roslyn_section,List<string> args)
+        {
+            var version = roslyn_section["LangVersion"] ?? "5";
+            if (version == "Unity")
+                version = "5";
+            else if (version == "Laster")
+                version = "latest";
+            else
+            {
+                int number = 5;
+                if (!int.TryParse(version, out number))
+                    version = "5";
+            }
+            args.Add($"/langversion:{version}");
         }
     }
 }
