@@ -1,4 +1,5 @@
 {
+  "UseRoslyn": true,
   "Logging": {
     "IncludeScopes": false,
     "LogLevel": {
