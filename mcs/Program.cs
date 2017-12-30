@@ -9,6 +9,7 @@ using NLog.Config;
 using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace mcs
 {
@@ -65,7 +66,11 @@ namespace mcs
                 {
                     Console.SetOut(newOut);
 
-                    return Microsoft.CodeAnalysis.CSharp.CommandLine.Program.Main(PrepareArguments(args));
+                    var compiler_ret = Microsoft.CodeAnalysis.CSharp.CommandLine.Program.Main(PrepareArguments(args));
+                    if(compiler_ret == 0)
+                        pdb2mdb(args);
+
+                    return compiler_ret;
                 }
             }
         }
@@ -181,6 +186,29 @@ namespace mcs
                     version = "5";
             }
             args.Add($"/langversion:{version}");
+        }
+
+        static void pdb2mdb(string[] args)
+        {
+            var response_file = args[0].Substring(1);
+            var unity_compiler_options = File.ReadAllLines(response_file);
+            var targetAssembly = unity_compiler_options.First(line => line.StartsWith("-out:")).Substring(5);
+
+            var process = new Process {
+                StartInfo =
+                {
+                    FileName = Path.Combine(WorkDirectory,"pdb2mdb.exe"),
+                    Arguments = targetAssembly,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
+            process.Start();
+            process.BeginOutputReadLine();
+            process.WaitForExit();
+            Logger.LogInformation($"pdb2mdb {targetAssembly} ExitCode: {process.ExitCode}");
         }
     }
 }
