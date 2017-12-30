@@ -29,10 +29,10 @@ dotnet publish -c Release -r win7-x64 -f netcoreapp2.0 -o Roslyn
 ## 3.smcs
 smcs为伪装的编译器,注意该程序集会是mono加载执行，所以只做具体编译器的程序启动,将编译输出的smcs.exe进行如下操作:
 1. 重命名%Unity目录%\Editor\Data\Mono\lib\mono\2.0\gmcs.exe 为mcs.exe,拷贝smcs.exe至该目录。
-2. 重命名%Unity目录%\Editor\Data\Mono\lib\mono\2.0\smcs.exe 为mcs.exe,拷贝smcs.exe至该目录。
+2. 重命名%Unity目录%\Editor\Data\Mono\lib\mono\Unity\smcs.exe 为mcs.exe,拷贝smcs.exe至该目录。
 
 # 行为配置
-程序优先使用Unity工程目录下的Roslyn.json文件，如果不存在则使用Rolsyn目录下的config.json,行为配置支持或将要支持一下行为
+程序优先使用Unity工程目录下的Roslyn.json文件，如果不存在则使用Rolsyn目录下的config.json,行为配置支持或将要支持以下行为
 1. UseRoslyn:bool 控制是否使用Roslyn编译器
 2. LanguageVersion:string 控制使用的C#语言版本
 	* Unity 默认行为,当前Unity最大支持的版本
